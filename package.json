@@ -1,0 +1,19 @@
+{
+  "name" : "intercom",
+  "version" : "0.1.1",
+  "description" : "dnode-protocol based event intercom using child_process.fork() function including child process lifecycle functions based on Forever.",
+  "author": "Sander Tolsma <sander at tolsma.net>",
+  "repository" : {
+    "type" : "git",
+    "url" : "http://github.com/stolsma/intercom.git"
+  },
+  "main": "./lib/intercom",
+  "dependencies": {
+    "dnode-protocol": "0.0.10",
+    "eventemitter2": "0.4.x",
+    "node-fork": "0.0.x"
+  },
+  "engines" : {
+     "node" : "0.4.x"
+  }
+}
