@@ -9,7 +9,7 @@
   },
   "main": "./lib/intercom",
   "dependencies": {
-    "dnode-protocol": "0.0.10",
+    "dnode-protocol": "0.0.12",
     "eventemitter2": "0.4.x",
     "node-fork": "0.1.x"
   },
