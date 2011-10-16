@@ -1,29 +1,101 @@
 # Intercom
 
-* Create child processes with dnode-protocol based event communication over internal nodejs fork communication channel with monitor and control functions for the lifecycle of the created child process. *
+*Create child processes with dnode-protocol based event communication over internal nodejs fork communication channel with monitor and control functions for the lifecycle of the created child process*
+
+# Installing Intercom
+
+`intercom` can be installed from NPM with:
+
+    npm install intercom
 
 # Using Intercom
 
 The code almost speaks for itself: see the example directory!!
 
+Parent code example (intercom.js):
+
+``` javascript
+var path = require('path'),
+	Child = require('../lib/intercom').EventChild;
+
+var child = Child(path.join(__dirname, 'child.js'));
+
+child.on('stdout', function(txt) {
+	console.log('child stdout: ' + txt);
+});
+
+child.on('stderr', function(txt) {
+	console.log('child stderr: ' + txt);
+});
+
+child.on('child::message', function(text) {
+	console.log('Parent: Child says: ', text);
+	child.emit('parent::message', 'This is your parent!');
+});
+
+child.on('child::quit', function() {
+	console.log('Parent: Child wants to quit!');
+	process.nextTick(function(){
+		child.stop();
+	});
+});
+
+child.start();
+```
+
+Child code example (child.js):
+
+``` javascript
+require('../lib/intercom');
+
+process.parent.ready(function() {
+	console.log('Comms Ready, sending message!');
+	process.parent.emit('child::message', 'I am alive!');
+});
+
+process.parent.on('parent::message', function(text) {
+	console.log('The parent says: ', text);
+	process.nextTick(function() {
+		process.parent.emit('child::quit');
+	});
+});
+
+console.log('Child is setup!!');
+```
+
+Output when run with `node example/intercom.js`:
+
+```
+child stdout: Child is setup!!
+
+child stdout: Comms Ready, sending message!
+
+Parent: Child says:  I am alive!
+child stdout: The parent says:  This is your parent!
+
+Parent: Child wants to quit!
+```
+
+
 # Code documentation
 
-## The Child class
+## The EventChild class
 
-The `Child` class is able to fork and control the lifecycle of a child process with a dnode-protocol based event channel between parent and child process.
-Events emitted on the `Child` instance created in the child process are transported to the mirror `Parent` class in the child process and emitted there too! 
+The `EventChild` class is able to fork and control the lifecycle of a child process with a dnode-protocol based event channel between parent and child process.
+Events emitted on the `EventChild` instance created in the child process are transported to the mirror `process.parent` instance in the child process and emitted there too! 
 
-The `Child` class has 7 important functions:
+The `EventChild` class has 7 important functions:
 
   * `constructor(script, options)` The constructor takes two arguments: `script` and `options`. The script is the script to start in the child process. The options are described in the options section.
   * `start()` Start the target script in a new child process (if not already started) and starts up the event communication channel.
-  * `emit(event, [argument1], [argument2]...[argumentx])` Emit an event on the child process Child instance
-  * `on(event, callback)` React on a defined child event 
-  * `onAny(callback)`  React on any child event
+  * `emit(event, [argument1], [argument2]...[argumentx])` Emit an event on the child `process.parent` instance.
+  * `localEmit(event, [argument1], [argument2]...[argumentx])` Emit a local event on the EventChild instance. This event is not being send to the child `process.parent` instance.
+  * `on(event, callback)` React on a defined child event.
+  * `onAny(callback)`  React on any child event.
   * `restart()`  Restarts the target script child process associated with this instance.
   * `stop()` Stops the target script associated with this instance. Prevents it from auto-respawning.  
   
-See [EventEmitter2](https://github.com/hij1nx/EventEmitter2) for more information on the `emit`, `on` `onAny` and other function standard available on EventEmitter2 classes.  
+See [EventEmitter2](https://github.com/hij1nx/EventEmitter2) for more information on the `emit`, `on`, `onAny` and other function standard available on EventEmitter2 classes.  
   
 ### Constructor options
 
@@ -39,7 +111,7 @@ See [EventEmitter2](https://github.com/hij1nx/EventEmitter2) for more informatio
     
     // These options control how quickly parent restarts a child process
     // as well as when to kill a "spinning" process
-    'minUptime': 2000,          // Minimum time a child process has to be up. Forever will 'exit' otherwise.
+    'minUptime': 2000,          // Minimum time a child process has to be up. EventChild will 'exit' otherwise.
     'spinSleepTime': 1000,      // Interval between restarts if a child is spinning (i.e. alive < minUptime).
     
     // Command to spawn as well as options and other vars 
@@ -49,8 +121,8 @@ See [EventEmitter2](https://github.com/hij1nx/EventEmitter2) for more informatio
     
     // All or nothing options passed along to `child_process.fork`.
     'spawnWith': {
-      env: process.env,         // Information passed along to the child process
-      customFds: [-1, -1, -1],  // that forever spawns.
+      env: process.env,         // Information passed along to the child process environment
+      customFds: [-1, -1, -1],  // that EventChild spawns.
       setsid: false
     },
     
@@ -61,9 +133,9 @@ See [EventEmitter2](https://github.com/hij1nx/EventEmitter2) for more informatio
   }
 ```
 
-### Events available when using an instance of Child
+### Standard events when using an instance of EventChild
 
-Each Child object is an instance of EventEmitter2. There are several core events that you can listen for. This are also the events types you cannot use to send over de communication channel!!:
+Each EventChild instance is an descendant of EventEmitter2. There are also several core events that you can listen for. This are also the events types you cannot use to send over de communication channel!!:
 
 * **error**    _[err, info]:_           Raised when an error occurs
 * **start**    _[child, child_data]:_   Raised when the target script is first started.
@@ -80,35 +152,24 @@ The following two events are related to the dnode-protocol RPC session:
 * **rpcexit**   _[]:_                   Raised when the dnode-protocol RPC session has ended. events won't be send to the child process anymore.
 
 
-## The Parent class
+## The Child Process
 
-The `Parent` class creates a dnode-protocol based event channel between parent and child process using by fork created `message` event and `send()` function.
-Events emitted on the `Parent` instance created in the child process are transported to the mirror `Child` class in the parent process and emitted there too! 
+The `intercom` module automatically creates a dnode-protocol based event channel between parent and child process when a, by fork created, `message` event and `send()` function are detected.
+Events emitted on the `process.parent` instance are transported to the mirror `EventChild` class in the parent process and emitted there too! 
 
-The `Parent` class has 7 important functions:
+The `process.parent` instance has 4 important functions:
 
-  * `constructor(startupFn, options)` The constructor takes two arguments. The startupFn is the callback function to call when the event communication channel is ready to be used. The options are described in the options section.
-  * `emit(event, [argument1], [argument2]...[argumentx])` Emit an event on the parent process Child instance
-  * `on(event, callback)` React on a defined parent event 
-  * `onAny(callback)`  React on any parent event
+  * `ready(readyFn)` Execute the given function when the event channel with the parent is ready
+  * `emit(event, [argument1], [argument2]...[argumentx])` Emit an event on the parent process `EventChild` instance.
+  * `localEmit(event, [argument1], [argument2]...[argumentx])` Emit a local event on the `process.parent` instance. This event is not being send to the parent `EventChild` instance.
+  * `on(event, callback)` React on a (parent) event. 
+  * `onAny(callback)`  React on any (parent) events.
   
 See [EventEmitter2](https://github.com/hij1nx/EventEmitter2) for more information on the `emit`, `on` `onAny` and other function standard available on EventEmitter2 classes.  
 
-### Constructor options
+### Standard events when using `process.parent`
 
-``` js
-  {
-    // Basic configuration options
-    'eventOptions': {           // Options for the EventEmitter2 constructor. See EventEmitter2!!
-       delimiter: '::',
-       wildcard: true
-     }
-  }
-```
-
-### Events available when using an instance of Child
-
-Each Child object is an instance of EventEmitter2. There are several core events that you can listen for. This are also the events types you cannot use to send over de communication channel!!:
+Each `process.parent` instance is a descendant of EventEmitter2. There are also several core events that you can listen for. This are also the events types you cannot use to send over de communication channel!!:
 
 * **error**    _[err, info]:_           Raised when an error occurs
 * **warn**     _[err, info]:_           Raised when something unexpected happens but there is no need to break the codeflow
@@ -117,7 +178,7 @@ The following two events are related to the dnode-protocol RPC session:
 
 * **rpcready**  _[]:_                   Raised when the dnode-protocol RPC session is up and running and events can be send and received
 * **rpcexit**   _[]:_                   Raised when the dnode-protocol RPC session has ended. events won't be send to the child process anymore.
-  
+
 
 Documentation License
 =====================

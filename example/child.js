@@ -8,15 +8,18 @@
  * @docauthor TTC/Sander Tolsma
  */
 
-var Parent = require('../lib/intercom').Parent;
+require('../lib/intercom');
 
-var parent = Parent(function() {
-	parent.emit('child::message', 'I am alive!');
+process.parent.ready(function() {
+	console.log('Comms Ready, sending message!');
+	process.parent.emit('child::message', 'I am alive!');
 });
 
-parent.on('parent::message', function(text) {
+process.parent.on('parent::message', function(text) {
 	console.log('The parent says: ', text);
 	process.nextTick(function() {
-		parent.emit('child::quit');
+		process.parent.emit('child::quit');
 	});
 });
+
+console.log('Child is setup!!');

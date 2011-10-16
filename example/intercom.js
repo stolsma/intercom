@@ -9,21 +9,25 @@
  */
 
 var path = require('path'),
-	Child = require('../lib/intercom').Child;
+	Child = require('../lib/intercom').EventChild;
 
 var child = Child(path.join(__dirname, 'child.js'));
 
 child.on('stdout', function(txt) {
-	console.log('stdout: ' + txt);
+	console.log('child stdout: ' + txt);
+});
+
+child.on('stderr', function(txt) {
+	console.log('child stderr: ' + txt);
 });
 
 child.on('child::message', function(text) {
-	console.log('Child says: ', text);
+	console.log('Parent: Child says: ', text);
 	child.emit('parent::message', 'This is your parent!');
 });
 
 child.on('child::quit', function() {
-	console.log('Child wants to quit!');
+	console.log('Parent: Child wants to quit!');
 	process.nextTick(function(){
 		child.stop();
 	});
