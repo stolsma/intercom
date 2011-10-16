@@ -16,28 +16,28 @@ Parent code example (intercom.js):
 
 ``` javascript
 var path = require('path'),
-	Child = require('../lib/intercom').EventChild;
+    Child = require('../lib/intercom').EventChild;
 
 var child = Child(path.join(__dirname, 'child.js'));
 
 child.on('stdout', function(txt) {
-	console.log('child stdout: ' + txt);
+  console.log('child stdout: ' + txt);
 });
 
 child.on('stderr', function(txt) {
-	console.log('child stderr: ' + txt);
+  console.log('child stderr: ' + txt);
 });
 
 child.on('child::message', function(text) {
-	console.log('Parent: Child says: ', text);
-	child.emit('parent::message', 'This is your parent!');
+  console.log('Parent: Child says: ', text);
+  child.emit('parent::message', 'This is your parent!');
 });
 
 child.on('child::quit', function() {
-	console.log('Parent: Child wants to quit!');
-	process.nextTick(function(){
-		child.stop();
-	});
+  console.log('Parent: Child wants to quit!');
+  process.nextTick(function(){
+    child.stop();
+  });
 });
 
 child.start();
@@ -46,18 +46,16 @@ child.start();
 Child code example (child.js):
 
 ``` javascript
-require('../lib/intercom');
-
 process.parent.ready(function() {
-	console.log('Comms Ready, sending message!');
-	process.parent.emit('child::message', 'I am alive!');
+  console.log('Comms Ready, sending message!');
+  process.parent.emit('child::message', 'I am alive!');
 });
 
 process.parent.on('parent::message', function(text) {
-	console.log('The parent says: ', text);
-	process.nextTick(function() {
-		process.parent.emit('child::quit');
-	});
+  console.log('The parent says: ', text);
+  process.nextTick(function() {
+    process.parent.emit('child::quit');
+  });
 });
 
 console.log('Child is setup!!');
@@ -84,10 +82,11 @@ Parent: Child wants to quit!
 The `EventChild` class is able to fork and control the lifecycle of a child process with a dnode-protocol based event channel between parent and child process.
 Events emitted on the `EventChild` instance created in the child process are transported to the mirror `process.parent` instance in the child process and emitted there too! 
 
-The `EventChild` class has 8 important functions:
+The `EventChild` class has 9 important functions:
 
   * `constructor(script, options)` The constructor takes two arguments: `script` and `options`. The script is the script to start in the child process. The options are described in the options section.
   * `start()` Start the target script in a new child process (if not already started) and starts up the event communication channel.
+  * `ready(readyFn)` Execute the given function when the event channel with the child is ready
   * `emit(event, [argument1], [argument2]...[argumentx])` Emit an event on the child `process.parent` instance.
   * `localEmit(event, [argument1], [argument2]...[argumentx])` Emit a local event on the EventChild instance. This event is not being send to the child `process.parent` instance.
   * `on(event, callback)` React on a defined child event.
