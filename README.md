@@ -84,7 +84,7 @@ Parent: Child wants to quit!
 The `EventChild` class is able to fork and control the lifecycle of a child process with a dnode-protocol based event channel between parent and child process.
 Events emitted on the `EventChild` instance created in the child process are transported to the mirror `process.parent` instance in the child process and emitted there too! 
 
-The `EventChild` class has 7 important functions:
+The `EventChild` class has 8 important functions:
 
   * `constructor(script, options)` The constructor takes two arguments: `script` and `options`. The script is the script to start in the child process. The options are described in the options section.
   * `start()` Start the target script in a new child process (if not already started) and starts up the event communication channel.
@@ -157,7 +157,7 @@ The following two events are related to the dnode-protocol RPC session:
 The `intercom` module automatically creates a dnode-protocol based event channel between parent and child process when a, by fork created, `message` event and `send()` function are detected.
 Events emitted on the `process.parent` instance are transported to the mirror `EventChild` class in the parent process and emitted there too! 
 
-The `process.parent` instance has 4 important functions:
+The `process.parent` instance has 5 important functions:
 
   * `ready(readyFn)` Execute the given function when the event channel with the parent is ready
   * `emit(event, [argument1], [argument2]...[argumentx])` Emit an event on the parent process `EventChild` instance.
