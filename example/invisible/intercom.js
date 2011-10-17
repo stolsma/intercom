@@ -9,7 +9,7 @@
  */
 
 var path = require('path'),
-    Child = require('../lib/intercom').EventChild;
+    Child = require('../../lib/intercom').EventChild;
 
 var child = Child(path.join(__dirname, 'child.js'));
 
