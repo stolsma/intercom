@@ -10,13 +10,15 @@
 
 # Using Intercom
 
-The code almost speaks for itself: see the example directory!!
+The code almost speaks for itself: see the example directories showing visisble and invisible examples!!
+
+Following is a invisible example of intercom use.
 
 Parent code example (intercom.js):
 
 ``` javascript
 var path = require('path'),
-    Child = require('../lib/intercom').EventChild;
+    Child = require('../../lib/intercom').EventChild;
 
 var child = Child(path.join(__dirname, 'child.js'));
 
