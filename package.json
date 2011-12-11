@@ -13,7 +13,10 @@
     "eventemitter2": "0.4.x",
     "node-fork": "0.1.x"
   },
+  "scripts": { 
+    "test": "vows test/**/*-test.js --isolate --spec"
+  },
   "engines" : {
-     "node" : "0.4.x"
+     "node" : "0.4.x || 0.6.x"
   }
 }
