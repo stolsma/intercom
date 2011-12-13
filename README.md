@@ -1,6 +1,6 @@
 # Intercom
 
-*Create child processes with dnode-protocol based event communication over internal nodejs fork communication channel with monitor and control functions for the lifecycle of the created child process*
+*Create child processes with dnode-protocol based event communication over lookalike nodejs fork communication channel with monitor and control functions for the lifecycle of the created child process*
 
 # Installing Intercom
 

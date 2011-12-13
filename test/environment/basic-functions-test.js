@@ -21,7 +21,6 @@ vows.describe('environment/basic-functions').addBatch({
       return helpers.createChild({script: script});
     },
     "it should be properly created": function(child) {
-      // TODO Implement creation test
       assert.isTrue(!!child);
     },
     "start a child": {
