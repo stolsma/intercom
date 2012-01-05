@@ -8,7 +8,7 @@
  * @docauthor TTC/Sander Tolsma
  */
 
-var intercom = require('../lib/intercom');
+var intercom = require('../lib/intercom'),
     Child = intercom.EventChild,
     helpers = exports;
 
@@ -39,4 +39,4 @@ helpers.createChild = function(options) {
   });
   
   return child;
-}
+};
