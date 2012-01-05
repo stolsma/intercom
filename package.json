@@ -11,7 +11,7 @@
   "dependencies": {
     "dnode-protocol": "0.0.12",
     "eventemitter2": "0.4.x",
-    "node-fork": "0.2.x >=0.2.1"
+    "node-fork": "0.3.x"
   },
   "devDependencies": {
     "vows": "0.6.x >=0.6.0"
