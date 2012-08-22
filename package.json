@@ -1,6 +1,6 @@
 {
   "name" : "intercom",
-  "version" : "0.4.0",
+  "version" : "0.4.1",
   "description" : "dnode-protocol and EventEmitter2 based event intercom using lookalike child_process.fork() function. Including child process lifecycle functions based on Forever.",
   "author": "Sander Tolsma <sander at tolsma.net>",
   "repository" : {
