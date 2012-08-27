@@ -1,6 +1,6 @@
 # Intercom
 
-*Create child processes with dnode-protocol based event communication over lookalike nodejs fork communication channel with monitor and control functions for the lifecycle of the created child process*
+*Create child processes with dnode-protocol based event communication over the nodejs fork internal communication channel, with monitor and control functions for the lifecycle of the created child process*
 
 # Installing Intercom
 
@@ -120,11 +120,9 @@ See [EventEmitter2](https://github.com/hij1nx/EventEmitter2) for more informatio
     'options': ['foo','bar'],   // Additional arguments to pass to the script,
     'sourceDir': 'script/path'  // Directory that the source script is in
     
-    // All or nothing options passed along to `child_process.fork`.
+    // All or nothing options passed along to `child_process.fork`. See for more info the NodeJS documentation.
     'spawnWith': {
-      env: process.env,         // Information passed along to the child process environment
-      customFds: [-1, -1, -1],  // that EventChild spawns.
-      setsid: false
+      env: process.env          // Information passed along to the child process environment
     },
     
     // More specific options to pass along to `child_process.spawn` which 
