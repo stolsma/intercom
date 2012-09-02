@@ -1,7 +1,7 @@
 {
   "name" : "intercom",
-  "version" : "0.4.1",
-  "description" : "dnode-protocol and EventEmitter2 based event intercom using lookalike child_process.fork() function. Including child process lifecycle functions based on Forever.",
+  "version" : "0.5.0",
+  "description" : "Create child processes with dnode-protocol based event communication over the nodejs IPC channel, with monitor and control functions for the lifecycle of the created child process.",
   "author": "Sander Tolsma <sander at tolsma.net>",
   "repository" : {
     "type" : "git",
