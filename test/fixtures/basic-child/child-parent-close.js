@@ -19,6 +19,15 @@ process.parent.on('parent::message', function(text) {
   process.nextTick(function() {
     console.log('Send at quit and before emit!');
     process.parent.emit('child::quitforce');
+    console.log('Send at quit and after emit!');
+    process.nextTick(function() {
+      console.log('Send after quit!');
+      process.parent.emit('child::afterquit');
+    });
+  });
+  
+  process.parent.on('child::afterquit', function(){
+    console.log('received child::afterquit');
   });
 });
 
