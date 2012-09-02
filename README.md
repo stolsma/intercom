@@ -1,6 +1,8 @@
 # Intercom
 
-*Create child processes with dnode-protocol based event communication over the nodejs fork internal communication channel, with monitor and control functions for the lifecycle of the created child process*
+*Create child processes with dnode-protocol based event communication over the nodejs IPC channel, with monitor and control functions for the lifecycle of the created child process*
+
+Important: per Intercom version 0.5.0 the behavior of the 'exit' event changed!!! Added is the 'close' event as direct replacement for the old 'exit' event. See below for more information.
 
 # Installing Intercom
 
@@ -63,7 +65,7 @@ process.parent.on('parent::message', function(text) {
 console.log('Child is setup!!');
 ```
 
-Output when run with `node example/intercom.js`:
+Output when run with `node example/visible/intercom.js`:
 
 ```
 child stdout: Child is setup!!
@@ -95,6 +97,7 @@ The `EventChild` class has 9 important functions:
   * `onAny(callback)`  React on any child event.
   * `restart()`  Restarts the target script child process associated with this instance.
   * `stop()` Stops the target script associated with this instance. Prevents it from auto-respawning.  
+  * `disconnect()` Disconnects and closes the IPC channel and the RPC session but lets the child running.  
   
 See [EventEmitter2](https://github.com/hij1nx/EventEmitter2) for more information on the `emit`, `on`, `onAny` and other function standard available on EventEmitter2 classes.  
   
@@ -107,8 +110,7 @@ See [EventEmitter2](https://github.com/hij1nx/EventEmitter2) for more informatio
        delimiter: '::',
        wildcard: true
      },
-    'forever': true,            // Indicates that this script should run forever
-    'max': 10,                  // Sets the maximum number of times a given script should run
+    'max': 10,                  // Sets the maximum number of times a given script should run (undefined = forever)
     
     // These options control how quickly parent restarts a child process
     // as well as when to kill a "spinning" process
@@ -121,14 +123,13 @@ See [EventEmitter2](https://github.com/hij1nx/EventEmitter2) for more informatio
     'sourceDir': 'script/path'  // Directory that the source script is in
     
     // All or nothing options passed along to `child_process.fork`. See for more info the NodeJS documentation.
-    'spawnWith': {
-      env: process.env          // Information passed along to the child process environment
-    },
+    'spawnWith': {},
     
     // More specific options to pass along to `child_process.spawn` which 
     // will override anything passed to the `spawnWith` option
     'env': { 'ADDITIONAL': 'CHILD ENV VARS' }
     'cwd': '/path/to/child/working/directory'
+    'silent': true,             // Silences the output from stdout and stderr in the parent process
   }
 ```
 
@@ -136,19 +137,23 @@ See [EventEmitter2](https://github.com/hij1nx/EventEmitter2) for more informatio
 
 Each EventChild instance is an descendant of EventEmitter2. There are also several core events that you can listen for. This are also the events types you cannot use to send over de communication channel!!:
 
-* **error**    _[err, info]:_           Raised when an error occurs
-* **start**    _[child, child_data]:_   Raised when the target script is first started.
-* **stop**     _[child_data]:_          Raised when the target script is stopped by the user
-* **restart**  _[child]:_               Raised each time the target script is restarted
-* **exit**     _[child]:_               Raised when the target script actually exits (permenantly).
-* **stdout**   _[data]:_                Raised when data is received from the child process' stdout
-* **stderr**   _[data]:_                Raised when data is received from the child process' stderr
-* **warn**     _[err, info]:_           Raised when something unexpected happens but there is no need to break the codeflow
+* **error**         _[err, info]:_              Raised when an error occurs
+* **start**         _[child_data]:_             Raised when the target script is first started
+* **stop**          _[child_data]:_             Raised when the target script is stopped by the user
+* **restart**       _[child_data]:_             Raised each time the target script is restarted
+* **exit**          _[code, signal]:_           Raised when the target script process actually exits (before restart dec
+* **close**         _[spinning, code, signal]_  Raised when the target script actually exits permenantly.
+* **disconnect**    _[]_                        Raised when disconnection from the IPC channel is requested
+* **disconnected**  _[]_                        Raised when the IPC channel is disconnected
+* **stdout**        _[data]:_                   Raised when data is received from the child process' stdout
+* **stderr**        _[data]:_                   Raised when data is received from the child process' stderr
+* **warn**          _[err, info]:_              Raised when something unexpected happens but there's no need to break the codeflow
+
 
 The following two events are related to the dnode-protocol RPC session:
 
-* **rpcready**  _[]:_                   Raised when the dnode-protocol RPC session is up and running and events can be send and received
-* **rpcexit**   _[]:_                   Raised when the dnode-protocol RPC session has ended. events won't be send to the child process anymore.
+* **rpcready**      _[]:_                       Raised when the dnode-protocol RPC session is up and running and events can be send and received
+* **rpcexit**       _[]:_                       Raised when the dnode-protocol RPC session has ended. events won't be send to the child process anymore.
 
 
 ## The Child Process
@@ -163,6 +168,7 @@ The `process.parent` instance has 5 important functions:
   * `localEmit(event, [argument1], [argument2]...[argumentx])` Emit a local event on the `process.parent` instance. This event is not being send to the parent `EventChild` instance.
   * `on(event, callback)` React on a (parent) event. 
   * `onAny(callback)`  React on any (parent) events.
+  * `disconnect()` Disconnects and closes the IPC channel and the RPC session but lets the child running until its done or `exit` is called .  
   
 See [EventEmitter2](https://github.com/hij1nx/EventEmitter2) for more information on the `emit`, `on` `onAny` and other function standard available on EventEmitter2 classes.  
 
@@ -170,13 +176,15 @@ See [EventEmitter2](https://github.com/hij1nx/EventEmitter2) for more informatio
 
 Each `process.parent` instance is a descendant of EventEmitter2. There are also several core events that you can listen for. This are also the events types you cannot use to send over de communication channel!!:
 
-* **error**    _[err, info]:_           Raised when an error occurs
-* **warn**     _[err, info]:_           Raised when something unexpected happens but there is no need to break the codeflow
+* **disconnect**    _[]_                        Raised when disconnection from the IPC channel is requested
+* **disconnected**  _[]_                        Raised when the IPC channel is disconnected
+* **error**         _[err, info]:_              Raised when an error occurs
+* **warn**          _[err, info]:_              Raised when something unexpected happens but there is no need to break the codeflow
 
 The following two events are related to the dnode-protocol RPC session:
 
-* **rpcready**  _[]:_                   Raised when the dnode-protocol RPC session is up and running and events can be send and received
-* **rpcexit**   _[]:_                   Raised when the dnode-protocol RPC session has ended. events won't be send to the child process anymore.
+* **rpcready**      _[]:_                       Raised when the dnode-protocol RPC session is up and running and events can be send and received
+* **rpcexit**       _[]:_                       Raised when the dnode-protocol RPC session has ended. events won't be send to the child process anymore.
 
 
 Documentation License
