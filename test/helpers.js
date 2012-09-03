@@ -14,7 +14,11 @@ var intercom = require('../lib/intercom'),
     inspect = require('util').inspect;
 
 helpers.createChild = function(options) {
-  var child = Child(options.script, { visible: true});
+  options.childoptions = options.childoptions || {
+    visible: true,
+    silent: true
+  };
+  var child = Child(options.script, options.childoptions);
   
   child.testing = {};
   child.testing.stdout = options.stdout || [];
