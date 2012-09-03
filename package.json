@@ -1,6 +1,6 @@
 {
   "name" : "intercom",
-  "version" : "0.5.0",
+  "version" : "0.5.1",
   "description" : "Create child processes with dnode-protocol based event communication over the nodejs IPC channel, with monitor and control functions for the lifecycle of the created child process.",
   "author": "Sander Tolsma <sander at tolsma.net>",
   "repository" : {
