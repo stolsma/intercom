@@ -28,7 +28,7 @@ helpers.createChild = function(options) {
 
   child.onAny(function(){
     var args = Array.prototype.slice.call(arguments, 0);
-    if (this.event == 'stdout') {
+    if (this.event == 'stdout' || this.event == 'stderr' ) {
       args[0] = args[0].toString();
     }
     child.testing.events.push({
@@ -38,11 +38,11 @@ helpers.createChild = function(options) {
   });
 
   child.on('stdout', function(txt) {
-    child.testing.stdout.push(txt);
+    child.testing.stdout.push(txt.toString());
   });
 
   child.on('stderr', function(txt) {
-    child.testing.stderr.push(txt);
+    child.testing.stderr.push(txt.toString());
   });
 
   child.on('child::message', function(text) {

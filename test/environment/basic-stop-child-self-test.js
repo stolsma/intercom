@@ -30,6 +30,7 @@ vows.describe('environment/basic-stop-child-self').addBatch({
         // if the child takes too long to close
         var timecode = setTimeout(function() {
           timecode = null;
+          child.stop();
           that.callback(new Error('Timeout occured'), child);
         }, 10000);
         
